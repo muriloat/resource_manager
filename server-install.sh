@@ -1,5 +1,5 @@
 #!/bin/bash
-# This script installs the Resource Manager server and sets up the provided services.
+# This script-v2 installs the Resource Manager server and sets up the provided services.
 # It creates a system user for the server, a Python virtual environment, a systemd service,
 # and a sudoers file for the system user to manage the services.
 # Author: Murilo Teixeira - dev@murilo.etc.br
@@ -21,7 +21,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 # Vars
-REPO_URL="https://github.com/muriloat/resource_manager.git"
+REPO_URL="https://github.com/murilot/resource_manager.git"
 TMP_DIR=$(mktemp -d)
 INSTALL_DIR="/opt/resource_manager"
 VENV_DIR="${INSTALL_DIR}/venv"
@@ -57,7 +57,26 @@ cat <<EOF > "${SERVICES_CONFIG_FILE}"
 services_config = {
 EOF
 
+# Validate services exist and find their locations
+VALID_SERVICES=()
+SERVICE_LOCATIONS=()
+
 for SERVICE in "$@"; do
+  # Check common locations for systemd service files
+  if [ -f "/etc/systemd/system/${SERVICE}.service" ]; then
+    echo "Found service ${SERVICE} in /etc/systemd/system/"
+    VALID_SERVICES+=("${SERVICE}")
+    SERVICE_LOCATIONS+=("/etc/systemd/system/${SERVICE}.service")
+  elif [ -f "/lib/systemd/system/${SERVICE}.service" ]; then
+    echo "Found service ${SERVICE} in /lib/systemd/system/"
+    VALID_SERVICES+=("${SERVICE}")
+    SERVICE_LOCATIONS+=("/lib/systemd/system/${SERVICE}.service")
+  else
+    echo "Warning: Service ${SERVICE} not found in common systemd directories. Adding anyway but verify it exists."
+    VALID_SERVICES+=("${SERVICE}")
+    SERVICE_LOCATIONS+=("unknown")
+  fi
+
   cat <<EOF >> "${SERVICES_CONFIG_FILE}"
     "${SERVICE}": {"service_name": "${SERVICE}", "start_string": "<edit_me>", "start_timeout": 10, "stop_timeout": 10},
 EOF
@@ -145,6 +164,12 @@ systemctl start resource_manager.service
 
 # Clean up temporary files
 rm -rf "${TMP_DIR}"
+
+# Print summary of service locations
+echo "Service locations summary:"
+for i in "${!VALID_SERVICES[@]}"; do
+  echo "  ${VALID_SERVICES[$i]}: ${SERVICE_LOCATIONS[$i]}"
+done
 
 echo "Installation complete! The Resource Manager service is now running but there is still one config missing. \
 You must add the strings that each service logs in journalctl when it successfully finishes initialization in the \
