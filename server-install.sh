@@ -43,6 +43,7 @@ mkdir -p "${INSTALL_DIR}"
 echo "Copying server files..."
 cp "${TMP_DIR}/server/resource_manager_server.py" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/requirements.txt" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/fixed_pagination.py" "${INSTALL_DIR}/"
 
 # Create services_config.py from the provided services
 echo "Generating services_config.py..."
