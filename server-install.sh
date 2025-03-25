@@ -95,13 +95,16 @@ echo "Found journalctl at: ${JOURNALCTL_PATH}"
 echo "Creating sudoers file at ${SUDOERS_FILE}..."
 {
   echo "${SERVICE_USER} ALL=(root) NOPASSWD: \\"
-  for SERVICE in "$@"; do
+  for SERVICE in "${VALID_SERVICES[@]}"; do
     echo "  ${SYSTEMCTL_PATH} start ${SERVICE}.service, \\"
     echo "  ${SYSTEMCTL_PATH} stop ${SERVICE}.service, \\"
     echo "  ${SYSTEMCTL_PATH} status ${SERVICE}.service, \\"
     echo "  ${SYSTEMCTL_PATH} enable ${SERVICE}.service, \\"
     echo "  ${SYSTEMCTL_PATH} disable ${SERVICE}.service, \\"
     echo "  ${SYSTEMCTL_PATH} is-active ${SERVICE}.service, \\"
+    echo "  ${SYSTEMCTL_PATH} is-enabled ${SERVICE}.service, \\"
+    echo "  ${SYSTEMCTL_PATH} cat ${SERVICE}.service, \\"
+    echo "  ${SYSTEMCTL_PATH} show ${SERVICE}.service --property=LoadState, \\"
     echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service * -n *, \\"
     echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service -f, \\"
     echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service -n * --since * --no-pager, \\"
