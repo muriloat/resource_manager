@@ -11,6 +11,7 @@
 import subprocess, time, datetime, re, os
 from flask import Flask, jsonify, abort
 from services_config import services_config
+from fixed_pagination import get_paginated_journal_logs
 version="1.0.0"
 
 app = Flask(__name__)
@@ -247,7 +248,7 @@ def get_service_config(service_name):
 
 @app.route('/services/<service_name>/logs', methods=['GET'])
 def get_service_logs(service_name):
-    """Return recent logs for a service."""
+    """Return recent logs for a service with pagination support."""
     from flask import request
     
     if service_name not in services_config:
@@ -255,10 +256,34 @@ def get_service_logs(service_name):
     
     # Get query parameters
     lines = request.args.get('lines', '50')
-    since = request.args.get('since', '1 hour ago')
+    since = request.args.get('since', '24 hours ago')
+    page = request.args.get('page', '1')
+    per_page = request.args.get('per_page', '50')
     
     try:
-        # Use sudo with journalctl
+        # Convert parameters to integers
+        page_num = int(page)
+        per_page_num = int(per_page)
+        lines_num = int(lines)
+        
+        # Basic validation
+        if page_num < 1:
+            page_num = 1
+        if per_page_num < 1:
+            per_page_num = 50
+        
+        # Use our pagination utility if page parameter is provided
+        if 'page' in request.args:
+            app.logger.info(f"Using paginated logs retrieval: page={page_num}, per_page={per_page_num}")
+            return jsonify(get_paginated_journal_logs(
+                service_name, 
+                page=page_num,
+                per_page=per_page_num,
+                since=since
+            ))
+        
+        # Legacy non-paginated approach for backward compatibility
+        app.logger.info("Using legacy non-paginated logs retrieval")
         cmd = [
             "sudo", "/usr/bin/journalctl", 
             "-u", f"{service_name}.service",
@@ -280,7 +305,6 @@ def get_service_logs(service_name):
         if code != 0:
             app.logger.warning(f"journalctl returned non-zero exit code: {code}")
             app.logger.warning(f"stderr: {stderr}")
-            # Continue anyway to try to parse what we got
         
         # Parse logs into structured format
         log_entries = []
@@ -315,7 +339,6 @@ def get_service_logs(service_name):
                         })
             except Exception as e:
                 app.logger.warning(f"Error parsing log line: {e}")
-                # Keep the raw line that we already added
             
             log_entries.append(log_entry)
         
@@ -369,7 +392,7 @@ def health_check():
         }
     
     return jsonify({
-        "status": "healthy" if systemd_ok else "degraded",
+        "status": "Healthy" if systemd_ok else "Degraded",
         "timestamp": datetime.datetime.now().isoformat(),
         "systemd_available": systemd_ok,
         "self_status": self_status,

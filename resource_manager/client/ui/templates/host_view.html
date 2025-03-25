@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ host.name }} - Resource Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/host_view.css') }}">
+</head>
+<body>
+    <div class="container">
+        <a href="/" class="back-link">← Back to Hosts</a>
+        <h1>Host: {{ host.name }}</h1>
+        
+        <!-- Store host data for JavaScript -->
+        <div id="host-data" data-host-id="{{ host.id }}" style="display: none;"></div>
+        
+        <div class="host-info">
+            <p><strong>ID:</strong> {{ host.id }}</p>
+            <p><strong>URL:</strong> {{ host.url }}</p>
+            <p><strong>Status:</strong> <span class="status-{{ host.status }}">{{ host.status }}</span></p>
+            <p><strong>Timeout:</strong> {{ host.timeout }} seconds</p>
+            {% if host.error %}
+            <p class="error-message"><strong>Error:</strong> {{ host.error }}</p>
+            {% endif %}
+            
+            <div class="host-actions">
+                <button class="button reload-btn" onclick="testConnection()">Test Connection</button>
+            </div>
+        </div>
+        
+        <h2>Services</h2>
+        
+        <div id="services-container">
+            <div id="services-loading">
+                <span class="loading-spinner"></span> Loading services...
+            </div>
+            <div id="services-error" class="error-message" style="display: none;"></div>
+            
+            <table id="services-table" class="service-table" style="display: none;">
+                <thead>
+                    <tr>
+                        <th style="width: 40%;">Name</th>
+                        <th style="width: 15%;">Status</th>
+                        <th style="width: 15%;">Boot</th>
+                        <th style="width: 30%;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="services-list">
+                    <!-- Services will be inserted here -->
+                </tbody>
+            </table>
+            
+            <div id="no-services" style="display: none; margin-top: 20px; font-style: italic;">
+                No services found on this host.
+            </div>
+        </div>
+    </div>
+    <!-- Include external JavaScript file -->
+    <script src="{{ url_for('static', filename='js/host_view.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Resource Manager</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Resource Manager</h1>
+        
+        <div class="table-header-container">
+            <h2>Hosts</h2>
+            <button id="add-host-button" class="add-button" title="Add New Host">+</button>
+        </div>
+        
+        {% if hosts or true %}
+        <table class="host-table" id="host-table">
+            <thead>
+                <tr>
+                    <th>Hostname</th>
+                    <th>Description</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for host in hosts %}
+                <tr data-host-id="{{ host.id }}">
+                    <td>{{ host.id }}</td>
+                    <td>{{ host.name }}</td>
+                    <td>{{ host.url }}</td>
+                    <td class="status-{{ host.status }}">{{ host.status }}</td>
+                    <td>
+                        <button class="button view-host" onclick="viewHost('{{ host.id }}')">View</button>
+                        <button class="button edit-host" onclick="editHost('{{ host.id }}')">Edit</button>
+                        <button class="button delete delete-host" onclick="deleteHost('{{ host.id }}')">Delete</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <p>No hosts configured yet. Click the + button to add a host.</p>
+        <table class="host-table" id="host-table">
+            <thead>
+                <tr>
+                    <th>Hostname</th>
+                    <th>Description</th>
+                    <th>URL</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        {% endif %}
+    </div>
+    <!-- Include external JavaScript file -->
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+</body>
+</html>

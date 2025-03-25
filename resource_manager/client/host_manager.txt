@@ -1,0 +1,38 @@
+# ...existing code...
+
+def get_hosts(self):
+    """Get list of all configured hosts with status."""
+    hosts = []
+    
+    for host_id in self.client_config.get_all_hosts():
+        config = self.client_config.get_host_config(host_id)
+        
+        # Get client for this host
+        client = self._get_client(host_id)
+        
+        # Test connection and get health status
+        health_status = "unknown"
+        error_message = None
+        try:
+            if client:
+                health_response = client.check_server_health()
+                # Check for error response from improved _make_request method
+                if "error" in health_response:
+                    health_status = "unreachable"
+                    error_message = health_response.get("message", "Unknown error")
+                else:
+                    health_status = health_response.get("status", "unknown")
+        except Exception as e:
+            health_status = "unreachable"
+            error_message = str(e)
+        
+        hosts.append({
+            "id": host_id,
+            "name": config.get("name", host_id),
+            "url": config.get("base_url"),
+            "status": health_status,
+            "error": error_message,  # Add error message for UI display
+            "timeout": config.get("timeout", 80)
+        })
+        
+    return hosts
