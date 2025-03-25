@@ -126,7 +126,7 @@ TODO...
 Send me a message and bless me with your criticisms <dev@murilo.etc.br> and run from your server:
 
 ```bash
-sudo curl -sSL https://raw.githubusercontent.com/murilot/resource_manager/main/server-uninstall.sh | bash
+sudo curl -sSL https://raw.githubusercontent.com/muriloat/resource_manager/refs/heads/main/server-uninstall.sh | bash
 ```
 
 Just a word of caution: Always review the script (or trust its source) before running it with elevated privileges.
