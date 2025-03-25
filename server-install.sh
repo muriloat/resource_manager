@@ -128,7 +128,7 @@ echo "Creating sudoers file at ${SUDOERS_FILE}..."
     echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service * -n *, \\"
     echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service -f, \\"
     echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service -n * --since * --no-pager, \\"
-    echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service * --since * --no-pager, \\"
+    echo "  ${JOURNALCTL_PATH} -u ${SERVICE}.service --since * --no-pager, \\"
   done
 } > "${SUDOERS_FILE}"
 
