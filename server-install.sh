@@ -21,7 +21,7 @@ if [ "$#" -lt 1 ]; then
 fi
 
 # Vars
-REPO_URL="https://github.com/murilot/resource_manager.git"
+REPO_URL="https://github.com/muriloat/resource_manager.git"
 TMP_DIR=$(mktemp -d)
 INSTALL_DIR="/opt/resource_manager"
 VENV_DIR="${INSTALL_DIR}/venv"
