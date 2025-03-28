@@ -100,7 +100,7 @@ cp "${REPO_PATH}/server/requirements.txt" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/fixed_pagination.py" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/get_detailed.sh" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/server-update.sh" "${INSTALL_DIR}/"
-chmod +x "${INSTALL_DIR}/server-updater.sh"
+chmod +x "${INSTALL_DIR}/server-update.sh"
 
 # Merge service configurations if needed
 if [[ -f "${CONFIG_FILE}" && -f "${REPO_PATH}/server/services_config.py" ]]; then
