@@ -45,9 +45,11 @@ else
     echo "Without specifying services to manage, the Resource Manager will be installed"
     echo "but won't be configured to manage any services."
     echo ""
-    echo "Recommended usage: sudo $0 service1 service2 ..."
-    echo "Example: sudo $0 nginx mysql docker"
-    echo ""
+    echo "Recommended usage: sudo server-bootstrap.sh service1 service2 ..."
+    echo "Example: sudo server-bootstrap.sh nginx mysql docker"
+    echo "or"
+    echo "Recommended usage: curl -sSL https://raw.githubusercontent.com/muriloat/resource_manager/refs/heads/main/server/server-bootstrap.sh | sudo bash -s service1 service2 ..."
+    echo "Example: curl -sSL https://raw.githubusercontent.com/muriloat/resource_manager/refs/heads/main/server/server-bootstrap.sh | sudo bash -s nginx mysql docker"
     
     # Ask for confirmation
     read -p "Do you want to continue anyway? (y/N): " -n 1 -r CONFIRM
