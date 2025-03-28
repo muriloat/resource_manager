@@ -51,12 +51,12 @@ mkdir -p "${INSTALL_DIR}"
 
 # Copy server files from the repo
 echo "Copying server files..."
-cp "${TMP_DIR}/server/*" "${INSTALL_DIR}/"
-#cp "${TMP_DIR}/server/resource_manager_server.py" "${INSTALL_DIR}/"
-#cp "${TMP_DIR}/server/requirements.txt" "${INSTALL_DIR}/"
-#cp "${TMP_DIR}/server/bootstrap-server.sh" "${INSTALL_DIR}/"
-#cp "${TMP_DIR}/server/update-server.sh" "${INSTALL_DIR}/"
-#cp "${TMP_DIR}/server/get_detailed.sh" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/server-uninstall.sh*" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/resource_manager_server.py" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/requirements.txt" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/server-bootstrap.sh" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/server-update.sh" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/get_detailed.sh" "${INSTALL_DIR}/"
 
 # Create services_config.py from the provided services
 echo "Generating services_config.py..."
