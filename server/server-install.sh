@@ -51,7 +51,7 @@ mkdir -p "${INSTALL_DIR}"
 
 # Copy server files from the repo
 echo "Copying server files..."
-cp "${TMP_DIR}/server/server-uninstall.sh*" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/server-uninstall.sh" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/resource_manager_server.py" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/requirements.txt" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/server-bootstrap.sh" "${INSTALL_DIR}/"
