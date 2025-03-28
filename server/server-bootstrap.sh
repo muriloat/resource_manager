@@ -39,11 +39,11 @@ else
   echo "Bootstrapping Resource Manager update..."
   
   # Copy the update script from the repo to the installation directory
-  cp "${TMP_DIR}/server/update-server.sh" "${INSTALL_DIR}/"
-  chmod +x "${INSTALL_DIR}/update-server.sh"
+  cp "${TMP_DIR}/server/server-update.sh" "${INSTALL_DIR}/"
+  chmod +x "${INSTALL_DIR}/server-update.sh"
   
   # Run the update script from the repository
-  "${INSTALL_DIR}/update-server.sh" --repo-path="${TMP_DIR}"
+  "${INSTALL_DIR}/server-update.sh" --repo-path="${TMP_DIR}"
 fi
 
 # Clean up
