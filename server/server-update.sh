@@ -269,6 +269,7 @@ if [[ "${SERVICE_NAME}" != "${NEW_SERVICE_NAME}" ]]; then
   [Unit]
   Description=Resource Manager Server - v1.0.2 API Service
   After=network.target
+  X-Metadata-Version=1.0.2
 
   [Service]
   Type=simple
