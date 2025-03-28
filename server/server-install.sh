@@ -57,6 +57,7 @@ cp "${TMP_DIR}/server/requirements.txt" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/server-bootstrap.sh" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/server-update.sh" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/get_detailed.sh" "${INSTALL_DIR}/"
+cp "${TMP_DIR}/server/fixed_pagination.py" "${INSTALL_DIR}/"
 
 # Create services_config.py from the provided services
 echo "Generating services_config.py..."
