@@ -98,8 +98,8 @@ echo "Copying server files..."
 cp "${REPO_PATH}/server/resource_manager_server.py" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/requirements.txt" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/get_detailed.sh" "${INSTALL_DIR}/"
-cp "${REPO_PATH}/server/update-server.sh" "${INSTALL_DIR}/"
-chmod +x "${INSTALL_DIR}/update-server.sh"
+cp "${REPO_PATH}/server/server-update.sh" "${INSTALL_DIR}/"
+chmod +x "${INSTALL_DIR}/server-update.sh"
 
 # Merge service configurations if needed
 if [[ -f "${CONFIG_FILE}" && -f "${REPO_PATH}/server/services_config.py" ]]; then
