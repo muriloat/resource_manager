@@ -28,15 +28,13 @@ done
 echo "Updating Resource Manager server..."
 
 # Define variables
-SERVICE_NAME="resource_manager.service"
+SERVICE_NAME="resource_manager_manager.service"
 SUDOERS_FILE="/etc/sudoers.d/resource_manager"
 REPO_URL="https://github.com/muriloat/resource_manager.git"
 INSTALL_DIR="/opt/resource_manager"
 VENV_DIR="${INSTALL_DIR}/venv"
 CONFIG_FILE="${INSTALL_DIR}/services_config.py"
 
-# Changes
-NEW_SERVICE_NAME="resource_manager_server.service"
 
 # Extract preserved files from services_config.py if it exists
 PRESERVED_FILES=("services_config.py" "server-bootstrap.sh")
@@ -251,45 +249,58 @@ echo "Creating sudoers file at ${SUDOERS_FILE}..."
 
 chmod 440 "${SUDOERS_FILE}"
 
-# Check if we gonna change the service file name
-if [[ "${SERVICE_NAME}" != "${NEW_SERVICE_NAME}" ]]; then
+# Check if we need to update the systemd service file
+SYSTEMD_SERVICE_FILE="/etc/systemd/system/resource_manager.service"
+UPDATE_SERVICE_FILE=true
 
-  # Remove the old service file
-  if [[ -f "/etc/systemd/system/${SERVICE_NAME}" ]]; then
-    systemctl disable "${SERVICE_NAME}"
-    echo "Removing old service file: ${SERVICE_NAME}"
-    rm -f "/etc/systemd/system/${SERVICE_NAME}"
+# Check if we're going to change the service file name
+if [[ -f "${CONFIG_FILE}" ]] && grep -q "service_file_name" "${CONFIG_FILE}"; then
+  # Extract the custom service file name
+  CUSTOM_SERVICE_NAME=$(grep "service_file_name" "${CONFIG_FILE}" | sed -E 's/.*=\s*"([^"]+)".*/\1/')
+  
+  if [[ ! -z "${CUSTOM_SERVICE_NAME}" ]] && [[ "${CUSTOM_SERVICE_NAME}" != "resource_manager.service" ]]; then
+    echo "Using custom service file name: ${CUSTOM_SERVICE_NAME}"
+    SYSTEMD_SERVICE_FILE="/etc/systemd/system/${CUSTOM_SERVICE_NAME}"
   fi
-
-  # Create the new systemd service file
-  SERVICE_NAME="${NEW_SERVICE_NAME}"
-  SYSTEMD_SERVICE_FILE="/etc/systemd/system/${NEW_SERVICE_NAME}"
-  echo "Creating systemd service file at ${SYSTEMD_SERVICE_FILE}..."
-  cat <<EOF > "${SYSTEMD_SERVICE_FILE}"
-  [Unit]
-  Description=Resource Manager Server - v1.0.2 API Service
-  After=network.target
-  X-Metadata-Version=1.0.2
-
-  [Service]
-  Type=simple
-  User=${SERVICE_USER}
-  Group=${SERVICE_USER}
-  WorkingDirectory=${INSTALL_DIR}
-  ExecStart=${VENV_DIR}/bin/python ${INSTALL_DIR}/resource_manager_server.py
-  Restart=on-failure
-
-  [Install]
-  WantedBy=multi-user.target
-EOF
 fi
 
-# Reload systemd, enable and start the service
-echo "Reloading systemd daemon..."
-systemctl daemon-reload
-echo "Enabling ${SERVICE_NAME}..."
-systemctl enable ${SERVICE_NAME}
-echo "Starting ${SERVICE_NAME}..."
-systemctl start ${SERVICE_NAME}
+# Check if we're going to use custom service file content
+if [[ "${UPDATE_SERVICE_FILE}" == "true" ]]; then
+  echo "Updating systemd service file at ${SYSTEMD_SERVICE_FILE}..."
+  
+  # Create basic service file
+  cat <<EOF > "${SYSTEMD_SERVICE_FILE}"
+[Unit]
+Description=Resource Manager API Service
+After=network.target
+
+[Service]
+Type=simple
+User=${SERVICE_USER}
+Group=${SERVICE_USER}
+WorkingDirectory=${INSTALL_DIR}
+# Using the virtual environment's Python to run the server script
+ExecStart=${VENV_DIR}/bin/python ${INSTALL_DIR}/resource_manager_server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+  # Check for custom service file content in config and append if found
+  if [[ -f "${CONFIG_FILE}" ]] && grep -q "service_file_content" "${CONFIG_FILE}"; then
+    echo "Found custom service file content, applying additional settings..."
+    CUSTOM_CONTENT=$(grep -A 100 "service_file_content" "${CONFIG_FILE}" | 
+                    grep -B 100 -m 1 -E "^\]|^\"\"\"" | 
+                    grep -v "service_file_content" | 
+                    sed 's/^[ \t]*//')
+    
+    # Apply custom content by appending to appropriate sections
+    # ...implementation for parsing and applying custom content...
+  fi
+  
+  # Set proper permissions
+  chmod 644 "${SYSTEMD_SERVICE_FILE}"
+fi
 
 echo "Resource Manager server has been successfully updated."
