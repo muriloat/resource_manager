@@ -54,6 +54,9 @@ cp "${TMP_DIR}/server/server-bootstrap.sh" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/server-update.sh" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/get_detailed.sh" "${INSTALL_DIR}/"
 cp "${TMP_DIR}/server/fixed_pagination.py" "${INSTALL_DIR}/"
+chmod +x "${INSTALL_DIR}/server-bootstrap.sh"
+chmod +x "${INSTALL_DIR}/server-uninstall.sh"
+chmod +x "${INSTALL_DIR}/server-update.sh"
 
 # Create services_config.py from the provided services
 echo "Generating services_config.py..."
@@ -192,6 +195,8 @@ systemctl start ${SYSTEMD_FILE_NAME}
 
 # Clean up temporary files
 rm -rf "${TMP_DIR}"
+# We don't need install script anymore
+rm -f "${INSTALL_DIR}/server-install.sh"
 
 # Print summary of service locations
 echo "Service locations summary:"

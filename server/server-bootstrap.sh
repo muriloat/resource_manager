@@ -1,4 +1,6 @@
 #!/bin/bash
+# Script to bootstrap the Resource Manager Server
+
 set -euo pipefail
 
 # This script must be run as root
@@ -11,6 +13,7 @@ fi
 REPO_URL="https://github.com/muriloat/resource_manager.git"
 INSTALL_DIR="/opt/resource_manager"
 TMP_DIR=$(mktemp -d)
+OPERATION="operation"
 
 # Create installation directory if it doesn't exist
 mkdir -p "${INSTALL_DIR}"
@@ -27,7 +30,7 @@ git clone --depth 1 "${REPO_URL}" "${TMP_DIR}" || {
 if [[ $# -gt 0 ]]; then
   # Installation mode with service arguments
   echo "Running Resource Manager installation for services: $*"
-  
+  OPERATION="install"
   # Copy the install script from the repo to the installation directory
   cp "${TMP_DIR}/server/server-install.sh" "${INSTALL_DIR}/"
   chmod +x "${INSTALL_DIR}/server-install.sh"
@@ -37,7 +40,7 @@ if [[ $# -gt 0 ]]; then
 else
   # Update mode - no arguments
   echo "Bootstrapping Resource Manager update..."
-  
+  OPERATION="update"
   # Copy the update script from the repo to the installation directory
   cp "${TMP_DIR}/server/server-update.sh" "${INSTALL_DIR}/"
   chmod +x "${INSTALL_DIR}/server-update.sh"
@@ -49,5 +52,5 @@ fi
 # Clean up
 rm -rf "${TMP_DIR}"
 
-echo "Resource Manager operation completed successfully."
+echo "Resource Manager Server ${OPERATION} completed successfully."
 exit 0

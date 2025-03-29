@@ -37,16 +37,46 @@ CONFIG_FILE="${INSTALL_DIR}/services_config.py"
 
 
 # Extract preserved files from services_config.py if it exists
-PRESERVED_FILES=("services_config.py" "server-bootstrap.sh")
+PRESERVED_FILES=()
+DEFAULT_PRESERVED=("services_config.py" "server-bootstrap.sh")
+
 if [[ -f "${CONFIG_FILE}" ]]; then
   echo "Reading configuration from ${CONFIG_FILE}..."
+  
   # Extract preserved_files if defined in config
   if grep -q "preserved_files" "${CONFIG_FILE}"; then
-    # Parse the Python list into a Bash array
-    EXTRA_PRESERVED=$(grep "preserved_files" "${CONFIG_FILE}" | sed -E 's/.*\[([^]]*)\].*/\1/' | tr -d "' " | tr ',' ' ')
-    PRESERVED_FILES+=(${EXTRA_PRESERVED})
+    # Extract the entire list section
+    LIST_CONTENT=$(grep -A 20 "preserved_files" "${CONFIG_FILE}" | 
+                  grep -m 1 -B 20 "]" | 
+                  grep -v "^#")
+    
+    # Extract each quoted filename from the list
+    while IFS= read -r line; do
+      if [[ $line =~ \"([^\"]+)\" ]]; then
+        PRESERVED_FILES+=("${BASH_REMATCH[1]}")
+      fi
+    done < <(echo "$LIST_CONTENT")
+    
+    # If no files were found, use defaults
+    if [ ${#PRESERVED_FILES[@]} -eq 0 ]; then
+      echo "Warning: Could not parse preserved_files list correctly. Using defaults."
+      PRESERVED_FILES=("${DEFAULT_PRESERVED[@]}")
+    fi
+  else
+    # No preserved_files section found, use defaults
+    PRESERVED_FILES=("${DEFAULT_PRESERVED[@]}")
   fi
+  
+  # Always ensure services_config.py is preserved
+  if [[ ! " ${PRESERVED_FILES[*]} " =~ " services_config.py " ]]; then
+    PRESERVED_FILES+=("services_config.py")
+  fi
+  
   echo "Files to preserve during update: ${PRESERVED_FILES[*]}"
+else
+  # No config file found, use defaults
+  PRESERVED_FILES=("${DEFAULT_PRESERVED[@]}")
+  echo "No config file found. Using default preserved files: ${PRESERVED_FILES[*]}"
 fi
 
 
@@ -97,8 +127,8 @@ cp "${REPO_PATH}/server/resource_manager_server.py" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/requirements.txt" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/fixed_pagination.py" "${INSTALL_DIR}/"
 cp "${REPO_PATH}/server/get_detailed.sh" "${INSTALL_DIR}/"
-cp "${REPO_PATH}/server/server-update.sh" "${INSTALL_DIR}/"
-chmod +x "${INSTALL_DIR}/server-update.sh"
+#cp "${REPO_PATH}/server/server-update.sh" "${INSTALL_DIR}/"
+#chmod +x "${INSTALL_DIR}/server-update.sh"
 
 # Merge service configurations if needed
 if [[ -f "${CONFIG_FILE}" && -f "${REPO_PATH}/server/services_config.py" ]]; then
