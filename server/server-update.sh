@@ -28,7 +28,7 @@ done
 echo "Updating Resource Manager server..."
 
 # Define variables
-SERVICE_NAME="resource_manager_manager.service"
+SERVICE_NAME="resource_manager_server.service"
 SUDOERS_FILE="/etc/sudoers.d/resource_manager"
 REPO_URL="https://github.com/muriloat/resource_manager.git"
 INSTALL_DIR="/opt/resource_manager"
