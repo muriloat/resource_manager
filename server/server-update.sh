@@ -273,6 +273,7 @@ if [[ "${UPDATE_SERVICE_FILE}" == "true" ]]; then
 [Unit]
 Description=Resource Manager API Service
 After=network.target
+X-Metadata-API_Version=1.0.1
 
 [Service]
 Type=simple
