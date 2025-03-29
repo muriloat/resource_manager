@@ -308,4 +308,29 @@ fi
 echo "Setting ownership of ${INSTALL_DIR} to ${SERVICE_USER}..."
 chown -R ${SERVICE_USER}:${SERVICE_USER} "${INSTALL_DIR}"
 
+# Reload systemd configuration
+echo "Reloading systemd daemon..."
+systemctl daemon-reload
+
+# Restart the service
+echo "Starting ${SERVICE_NAME}..."
+systemctl start "${SERVICE_NAME}"
+
+# Check if the service started successfully
+if systemctl is-active --quiet "${SERVICE_NAME}"; then
+  echo "Service ${SERVICE_NAME} started successfully."
+else
+  echo "Warning: Service ${SERVICE_NAME} failed to start. Check status with: systemctl status ${SERVICE_NAME}"
+fi
+
+# Verify Python virtual environment
+if [[ ! -d "${VENV_DIR}" ]]; then
+  echo "Warning: Python virtual environment not found at ${VENV_DIR}. It may need to be recreated."
+fi
+
+# Final success message with clear indication of completion
+echo "==============================================================="
 echo "Resource Manager server has been successfully updated."
+echo "Service: ${SERVICE_NAME}"
+echo "Location: ${INSTALL_DIR}"
+echo "==============================================================="
