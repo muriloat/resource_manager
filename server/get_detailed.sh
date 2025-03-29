@@ -22,7 +22,7 @@ usage() {
   exit 1
 }
 
-# --- OS Module ---
+# OS Module 
 collect_os_info() {
   OS=$(grep '^NAME=' /etc/os-release | cut -d'"' -f2)
   OS_VERSION=$(grep '^VERSION_ID=' /etc/os-release | cut -d'"' -f2)
@@ -43,7 +43,7 @@ collect_os_info() {
   echo '}'
 }
 
-# --- CPU Module ---
+# CPU Module 
 collect_cpu_info() {
   CPU_INFO=$(lscpu | awk -F: '
     /Flags:/ { next }
@@ -68,7 +68,7 @@ collect_cpu_info() {
   echo '}'
 }
 
-# --- Disk Usage Module (df) ---
+# Disk Usage Module (df) 
 collect_disk_usage() {
   # Get disk usage information, excluding tmpfs, udev, and loop devices
   DF_OUTPUT=$(df -h | grep -v "tmpfs\|udev\|loop")
@@ -99,7 +99,7 @@ collect_disk_usage() {
   echo '}'
 }
 
-# --- Fixed Disk Partitions Module (fdisk) ---
+# Fixed Disk Partitions Module (fdisk) 
 collect_disk_partitions() {
   # Get list of disks (excluding loopback devices)
   DISKS=$(lsblk -d -n -o NAME | grep -v "loop")
@@ -213,7 +213,7 @@ collect_disk_partitions() {
   echo '}'
 }
 
-# --- Fixed S.M.A.R.T Module ---
+# Fixed S.M.A.R.T Module 
 collect_smart_info() {
   echo '{'
   echo '  "SMART": '
@@ -292,7 +292,7 @@ collect_smart_info() {
   echo '}'
 }
 
-# --- Network Interfaces Module ---
+# Network Interfaces Module 
 collect_network_interfaces() {
   echo '{'
   # Check if ifconfig is available, otherwise try ip
@@ -305,6 +305,9 @@ collect_network_interfaces() {
     echo '}'
     return
   fi
+  
+  # Start the array - Add opening bracket here
+  echo '  "NetworkInterfaces": ['
   
   # Process interfaces
   if [ "$NET_CMD" = "ifconfig" ]; then
@@ -441,7 +444,7 @@ collect_network_interfaces() {
   echo '}'
 }
 
-# --- Routing Table Module ---
+# Routing Table Module 
 collect_routing_table() {
   echo '{'
   # Check if route command is available
@@ -500,7 +503,7 @@ collect_routing_table() {
   echo '}'
 }
 
-# --- TCP/UDP Connections Module ---
+# TCP/UDP Connections Module 
 collect_tcp_udp_connections() {
   echo '{'
   # Check if netstat command is available
@@ -571,7 +574,7 @@ collect_tcp_udp_connections() {
   echo '}'
 }
 
-# --- Firewall Rules Module ---
+# Firewall Rules Module 
 collect_firewall_rules() {
   echo '{'
   # Check if iptables command is available
@@ -645,7 +648,7 @@ collect_firewall_rules() {
   echo '}'
 }
 
-# --- Main Execution Function ---
+# Main Execution Function 
 collect_all() {
   OUTFILE="/opt/resource_manager/static_info.json"
   mkdir -p "$(dirname "$OUTFILE")"
@@ -698,7 +701,7 @@ collect_all() {
   echo "Written complete system information to ${OUTFILE}"
 }
 
-# --- Individual module execution with validation ---
+# Individual module execution with validation 
 execute_module() {
   MODULE_NAME="$1"
   OUTPUT=$(eval "collect_${MODULE_NAME}")
@@ -707,6 +710,7 @@ execute_module() {
   if command -v python3 &> /dev/null; then
     if ! echo "$OUTPUT" | python3 -m json.tool > /dev/null 2>&1; then
       echo '{"status": "error generating '"${MODULE_NAME}"' information"}'
+      #echo '{"error": '"${OUTPUT}"'}' 
       return
     fi
   fi
@@ -714,7 +718,7 @@ execute_module() {
   echo "$OUTPUT"
 }
 
-# --- Main Script Execution ---
+# Main Script Execution 
 # Check if we have a parameter
 if [ $# -eq 0 ]; then
   usage
