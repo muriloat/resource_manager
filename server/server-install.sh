@@ -98,7 +98,7 @@ echo "" >> "${SERVICES_CONFIG_FILE}"
 echo "# Files to never update" >> "${SERVICES_CONFIG_FILE}"
 echo "preserved_files = [" >> "${SERVICES_CONFIG_FILE}"
 echo "    "server-bootstrap.sh"," >> "${SERVICES_CONFIG_FILE}"  
-echo "    "uninstall-server.sh"," >> "${SERVICES_CONFIG_FILE}"
+echo "    "server-uninstall.sh"," >> "${SERVICES_CONFIG_FILE}"
 echo "]" >> "${SERVICES_CONFIG_FILE}"
 
 
