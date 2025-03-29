@@ -22,12 +22,7 @@ fi
 
 # Packages dependencies:
 echo "Installing Dependencies..."
-apt-get update && apt-get install -y \
-  git \
-  python3-venv \
-  python3-pip \
-  python-is-python3 \
-  smartmontools
+apt-get update -y && apt-get install python3-venv python3-pip python-is-python3 smartmontools -y
 
 
 # Vars
@@ -37,7 +32,8 @@ INSTALL_DIR="/opt/resource_manager"
 VENV_DIR="${INSTALL_DIR}/venv"
 SERVICE_USER="resource_manager"
 SUDOERS_FILE="/etc/sudoers.d/resource_manager"
-SYSTEMD_SERVICE_FILE="/etc/systemd/system/resource_manager_server.service"
+SYSTEMD_FILE_NAME="resource_manager_server.service"
+SYSTEMD_SERVICE_FILE="/etc/systemd/system/${SYSTEMD_FILE_NAME}"
 
 echo "Installing Resource Manager Server with services: $*"
 
@@ -189,10 +185,10 @@ EOF
 # Reload systemd, enable and start the service
 echo "Reloading systemd daemon..."
 systemctl daemon-reload
-echo "Enabling resource_manager_server.service..."
-systemctl enable resource_manager_server.service
-echo "Starting resource_manager_server.service..."
-systemctl start resource_manager_server.service
+echo "Enabling ${SYSTEMD_FILE_NAME}..."
+systemctl enable ${SYSTEMD_FILE_NAME}
+echo "Starting ${SYSTEMD_FILE_NAME}..."
+systemctl start ${SYSTEMD_FILE_NAME}
 
 # Clean up temporary files
 rm -rf "${TMP_DIR}"

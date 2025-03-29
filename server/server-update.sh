@@ -250,7 +250,7 @@ echo "Creating sudoers file at ${SUDOERS_FILE}..."
 chmod 440 "${SUDOERS_FILE}"
 
 # Check if we need to update the systemd service file
-SYSTEMD_SERVICE_FILE="/etc/systemd/system/resource_manager.service"
+SYSTEMD_SERVICE_FILE="/etc/systemd/system/resource_manager_server.service"
 UPDATE_SERVICE_FILE=true
 
 # Check if we're going to change the service file name
@@ -303,5 +303,9 @@ EOF
   # Set proper permissions
   chmod 644 "${SYSTEMD_SERVICE_FILE}"
 fi
+
+# Set ownership of the installation directory
+echo "Setting ownership of ${INSTALL_DIR} to ${SERVICE_USER}..."
+chown -R ${SERVICE_USER}:${SERVICE_USER} "${INSTALL_DIR}"
 
 echo "Resource Manager server has been successfully updated."

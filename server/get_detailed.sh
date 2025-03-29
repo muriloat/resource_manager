@@ -1,4 +1,4 @@
-sudo apt install smartmontools#!/bin/bash
+#!/bin/bash
 # Description: This script collects detailed system information and allows calling specific information modules.
 # Usage: sudo ./get_detailed.sh [module_name]
 # Author: Murilo Teixeira - dev@murilo.etc.br

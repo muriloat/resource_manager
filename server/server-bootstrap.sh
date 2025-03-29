@@ -11,7 +11,6 @@ fi
 REPO_URL="https://github.com/muriloat/resource_manager.git"
 INSTALL_DIR="/opt/resource_manager"
 TMP_DIR=$(mktemp -d)
-CONFIG_FILE="${INSTALL_DIR}/services_config.py"
 
 # Create installation directory if it doesn't exist
 mkdir -p "${INSTALL_DIR}"
@@ -36,34 +35,6 @@ if [[ $# -gt 0 ]]; then
   # Run the installation script with the provided services
   "${INSTALL_DIR}/server-install.sh" "$@"
 else
-  # No arguments provided
-  # Check if this is a fresh installation (no existing config)
-  if [[ ! -f "${CONFIG_FILE}" ]]; then
-    echo "WARNING: No services specified for installation!"
-    echo "-----------------------------------------------"
-    echo "This appears to be a fresh installation, but no services were specified."
-    echo "Without specifying services to manage, the Resource Manager will be installed"
-    echo "but won't be configured to manage any services."
-    echo ""
-    echo "Recommended usage: sudo server-bootstrap.sh service1 service2 ..."
-    echo "Example: sudo server-bootstrap.sh nginx mysql docker"
-    echo "or"
-    echo "Recommended usage: curl -sSL https://raw.githubusercontent.com/muriloat/resource_manager/refs/heads/main/server/server-bootstrap.sh | sudo bash -s service1 service2 ..."
-    echo "Example: curl -sSL https://raw.githubusercontent.com/muriloat/resource_manager/refs/heads/main/server/server-bootstrap.sh | sudo bash -s nginx mysql docker"
-    
-    # Ask for confirmation
-    read -p "Do you want to continue anyway? (y/N): " -n 1 -r CONFIRM
-    echo ""
-    
-    if [[ ! $CONFIRM =~ ^[Yy]$ ]]; then
-      echo "Installation aborted. Please run again with service names."
-      rm -rf "${TMP_DIR}"
-      exit 1
-    fi
-    
-    echo "Proceeding with installation without service specifications..."
-  fi
-  
   # Update mode - no arguments
   echo "Bootstrapping Resource Manager update..."
   
