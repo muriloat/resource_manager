@@ -5,5 +5,5 @@ services_config = {
 
 preserved_files = [
     "server-bootstrap.sh",  
-    "uninstall-server.sh",
+    "server-uninstall.sh",
 ]
