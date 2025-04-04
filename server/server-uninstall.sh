@@ -13,10 +13,11 @@ fi
 echo "Uninstalling Resource Manager server..."
 
 # Define variables
-SERVICE_NAME="resource_manager.service"
+SERVICE_NAME="resource_manager_server.service"
 SERVICE_FILE="/etc/systemd/system/${SERVICE_NAME}"
 SUDOERS_FILE="/etc/sudoers.d/resource_manager"
-INSTALL_DIR="/opt/resource_manager"
+BASE_DIR="opt/resource_manager"
+INSTALL_DIR="${BASE_DIR}/server"
 SERVICE_USER="resource_manager"
 
 # Stop the service if it's running

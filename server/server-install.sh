@@ -28,8 +28,9 @@ apt-get update -y && apt-get install python3-venv python3-pip python-is-python3 
 # Vars
 REPO_URL="https://github.com/muriloat/resource_manager.git"
 TMP_DIR=$(mktemp -d)
-INSTALL_DIR="/opt/resource_manager"
-VENV_DIR="${INSTALL_DIR}/venv"
+BASE_DIR="/opt/resource_manager"  # FIXED: Added leading slash
+INSTALL_DIR="${BASE_DIR}/server"
+VENV_DIR="${BASE_DIR}/venv"
 SERVICE_USER="resource_manager"
 SUDOERS_FILE="/etc/sudoers.d/resource_manager"
 SYSTEMD_FILE_NAME="resource_manager_server.service"

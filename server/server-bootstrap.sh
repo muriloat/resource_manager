@@ -11,7 +11,9 @@ fi
 
 # Define variables
 REPO_URL="https://github.com/muriloat/resource_manager.git"
-INSTALL_DIR="/opt/resource_manager"
+BASE_DIR="/opt/resource_manager"  # FIXED: Added leading slash
+INSTALL_DIR="${BASE_DIR}/server"
+VENV_DIR="${BASE_DIR}/venv"
 TMP_DIR=$(mktemp -d)
 OPERATION="operation"
 

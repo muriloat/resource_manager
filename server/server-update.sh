@@ -33,8 +33,9 @@ echo "Updating Resource Manager server..."
 SERVICE_NAME="resource_manager_server.service"
 SUDOERS_FILE="/etc/sudoers.d/resource_manager"
 REPO_URL="https://github.com/muriloat/resource_manager.git"
-INSTALL_DIR="/opt/resource_manager"
-VENV_DIR="${INSTALL_DIR}/venv"
+BASE_DIR="/opt/resource_manager"  # FIXED: Added leading slash"
+INSTALL_DIR="${BASE_DIR}/server"
+VENV_DIR="${BASE_DIR}/venv"
 CONFIG_FILE="${INSTALL_DIR}/services_config.py"
 
 
