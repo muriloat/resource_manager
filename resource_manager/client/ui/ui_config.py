@@ -2,6 +2,8 @@ import os
 import json
 from pathlib import Path
 import logging
+hostname = os.uname()[1] if hasattr(os, 'uname') else os.environ.get('COMPUTERNAME', 'localhost')
+hoststr = f"{hostname}"
 
 class UIConfig:
     """Configuration manager for the Resource Manager UI."""
@@ -14,7 +16,7 @@ class UIConfig:
             "pagination": True,
             "items_per_page": 10
         },
-        "default_host_id": "default",
+        "default_host_id": "{hoststr}",
         "ui_settings": {
             "auto_refresh": True,
             "refresh_interval": 30  # seconds
@@ -81,13 +83,13 @@ class UIConfig:
     def get_default_host_id(self):
         """Get the default host ID."""
         # First try from UI config
-        host_id = self.settings.get("default_host_id", "default")
+        host_id = self.settings.get("default_host_id", f"{hoststr}")
         
         # Validate the host exists if we have client_config
         if self.client_config and host_id not in self.client_config.get_all_hosts():
             # Fall back to first available host or default
             hosts = self.client_config.get_all_hosts()
-            host_id = hosts[0] if hosts else "default"
+            host_id = hosts[0] if hosts else hoststr
             
             # Update the setting
             self.settings["default_host_id"] = host_id

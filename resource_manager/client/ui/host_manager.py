@@ -1,6 +1,9 @@
 import logging
 from ..resource_manager_client import ResourceManagerClient
 from ..config import ClientConfig
+import os
+hostname = os.uname()[1] if hasattr(os, 'uname') else os.environ.get('COMPUTERNAME', 'localhost')
+hoststr = f"{hostname}"
 
 class HostManager:
     """Manages host connections and provides a unified interface for the UI."""
@@ -18,9 +21,9 @@ class HostManager:
         self.clients = {}
         
         # Initialize default client
-        self._get_client("default")
+        self._get_client(hoststr)
         
-    def _get_client(self, host_id="default"):
+    def _get_client(self, host_id=hoststr):
         """Get or create a client for the specified host."""
         if host_id not in self.clients:
             try:

@@ -1,19 +1,21 @@
-# client/config.py
 import os
 import json
 import sys
 from pathlib import Path
 from .logging_setup import setup_client_logging
 
+hostname = os.uname()[1] if hasattr(os, 'uname') else os.environ.get('COMPUTERNAME', 'localhost')
+hoststr = f"{hostname}"
+
 class ClientConfig:
     """Configuration manager for Resource Manager Client."""
     
     DEFAULT_CONFIG = {
-        "default": {
+        hoststr: {
             "base_url": "http://192.168.10.95:5000",  # Changed to localhost for better first-time experience
             "timeout": 80,
             "verify_ssl": True,
-            "name": "Default Host"  # Added name for UI display
+            "name": "Resource Manager Monitor"  # Added name for UI display
         },
         "_client_settings": {
             "log_level": "DEBUG",
@@ -28,8 +30,8 @@ class ClientConfig:
         self._load_config()
         
         # Ensure default host exists
-        if "default" not in self.hosts:
-            self.hosts["default"] = self.DEFAULT_CONFIG["default"]
+        if hoststr not in self.hosts:
+            self.hosts[hoststr] = self.DEFAULT_CONFIG[hoststr]  # Changed to use hoststr directly
             self.save()
     
         # Set up logging
@@ -84,9 +86,9 @@ class ClientConfig:
             print(f"Error saving config: {e}")
             return False
     
-    def get_host_config(self, host_id="default"):
+    def get_host_config(self, host_id=hoststr):
         """Get configuration for a specific host."""
-        return self.hosts.get(host_id, self.DEFAULT_CONFIG["default"])
+        return self.hosts.get(host_id, self.DEFAULT_CONFIG[hoststr])  # Changed to use hoststr directly
     
     def set_host_config(self, host_id, config):
         """Set or update configuration for a host."""
@@ -100,7 +102,7 @@ class ClientConfig:
     
     def remove_host(self, host_id):
         """Remove a host from configuration."""
-        if host_id in self.hosts and host_id != "default":
+        if host_id in self.hosts and host_id != hoststr:
             del self.hosts[host_id]
             return self.save()
         return False

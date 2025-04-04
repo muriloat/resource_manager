@@ -3,6 +3,13 @@ from ..config import ClientConfig
 from ..logging_setup import setup_client_logging
 from .ui_config import UIConfig
 from .host_manager import HostManager
+
+
+# Load environment variables from env
+HOST = os.environ.get("HOST", "0.0.0.0")
+PORT = os.environ.get("PORT", 8081)
+DEBUG = os.environ.get("DEBUG", "ERROR").lower() in ("true", "1", "yes")
+
 # Run app from project's root by: python -m resource_manager.client.ui.app
 class ResourceManagerApp:
     """Main application class for the Resource Manager UI."""
@@ -10,7 +17,7 @@ class ResourceManagerApp:
     def __init__(self):
         """Initialize the Resource Manager UI application."""
         # Set up logging
-        self.logger = setup_client_logging(log_level="DEBUG")
+        self.logger = setup_client_logging(log_level=f"{DEBUG}")
         self.logger.info("Initializing Resource Manager application")
         
         # Load configuration
@@ -52,7 +59,7 @@ class ResourceManagerApp:
                 self.current_host_id = hosts[0]
                 self.ui_config.set_default_host_id(self.current_host_id)
             else:
-                self.current_host_id = "default"
+                self.current_host_id = "default"  # Pay attention to this!!!
                 
         return result
     
@@ -421,4 +428,4 @@ if __name__ == "__main__":
     
     # Run the application
     print("Starting Resource Manager UI...")
-    app.run(debug=True, host='0.0.0.0', port=8080)
+    app.run(debug=f"{DEBUG}", host=f"{HOST}", port=f"{PORT}")

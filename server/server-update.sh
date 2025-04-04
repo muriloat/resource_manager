@@ -1,5 +1,7 @@
 # Description: This script updates the Resource Manager server from github.
 # Usage: sudo ./server-update.sh 
+# TODO:
+# This script needs attention, stuck in the merge process. -> line 136
 
 #!/bin/bash
 set -euo pipefail
@@ -281,7 +283,7 @@ chmod 440 "${SUDOERS_FILE}"
 
 # Check if we need to update the systemd service file
 SYSTEMD_SERVICE_FILE="/etc/systemd/system/resource_manager_server.service"
-UPDATE_SERVICE_FILE=true
+UPDATE_SERVICE_FILE=false
 
 # Check if we're going to change the service file name
 if [[ -f "${CONFIG_FILE}" ]] && grep -q "service_file_name" "${CONFIG_FILE}"; then
