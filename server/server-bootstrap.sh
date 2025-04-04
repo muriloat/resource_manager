@@ -17,9 +17,6 @@ VENV_DIR="${BASE_DIR}/venv"
 TMP_DIR=$(mktemp -d)
 OPERATION="operation"
 
-# Reset terminal to sane state - helps with interactive menus
-stty sane
-
 # Clone the latest version of the repository
 echo "Downloading latest code from ${REPO_URL}..."
 git clone --depth 1 "${REPO_URL}" "${TMP_DIR}" || { 
@@ -44,16 +41,18 @@ if [[ ! -d "${INSTALL_DIR}" || ! -f "${INSTALL_DIR}/resource_manager_server.py" 
   # Install required packages for the interactive menu
   apt-get update -y && apt-get install -y whiptail
   
-  # Run the installation script with explicit terminal handling
-  # When called through curl | bash, we need to ensure proper TTY handling
-  if [ -t 0 ]; then
-    # Terminal is interactive
-    "${INSTALL_DIR}/server-install.sh"
-  else
-    # Non-interactive terminal - use script to simulate a TTY
-    echo "Running in non-interactive mode, simulating a terminal for menu interaction..."
-    script -c "${INSTALL_DIR}/server-install.sh" /dev/null
-  fi
+  echo "===================================================================="
+  echo "IMPORTANT: Running service selection menu. If you're installing via"
+  echo "curl pipe to bash, the menu may not work correctly."
+  echo ""
+  echo "If you encounter any issues with the menu, press Ctrl+C to cancel,"
+  echo "then run the installer directly with:"
+  echo "  sudo ${INSTALL_DIR}/server-install.sh"
+  echo "===================================================================="
+  sleep 3
+  
+  # Run the installation script
+  "${INSTALL_DIR}/server-install.sh"
 else
   # Update mode - server already exists
   echo "Existing installation found. Bootstrapping Resource Manager update..."
