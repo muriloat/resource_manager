@@ -85,6 +85,13 @@ systemctl enable ${SYSTEMD_FILE_NAME}
 echo "Starting ${SYSTEMD_FILE_NAME}..."
 systemctl start ${SYSTEMD_FILE_NAME}
 
+# Local Resource Manager Server Installation
+
+
+
+
+
+
 # Check the status of the service
 echo "Checking the status of ${SYSTEMD_FILE_NAME}..."
 systemctl status ${SYSTEMD_FILE_NAME} --no-pager
