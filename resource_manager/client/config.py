@@ -12,14 +12,14 @@ class ClientConfig:
     
     DEFAULT_CONFIG = {
         hoststr: {
-            "base_url": "http://192.168.10.95:5000",  # Changed to localhost for better first-time experience
+            "base_url": "http://127.0.0.1:5000", 
             "timeout": 80,
             "verify_ssl": True,
-            "name": "Resource Manager Monitor"  # Added name for UI display
+            "name": "Local Server"  # Added name for UI display
         },
         "_client_settings": {
-            "log_level": "DEBUG",
-            "log_file": None  # None means use default location
+            "log_level": "ERROR",  # Default log level
+            "log_file": None  
         }
     }
     
