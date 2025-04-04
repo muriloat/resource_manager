@@ -14,6 +14,98 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
+# Define a reusable function for service selection
+select_services() {
+  # Get all systemd services that are either active or enabled
+  echo "Finding all systemd services..."
+  local ALL_SERVICES=$(systemctl list-units --type=service --state=active,enabled --no-legend | awk '{print $1}' | sed 's/\.service$//')
+  local ACTIVE_SERVICES=()
+
+  # Create an associative array to map display names to actual service names
+  declare -A SERVICE_MAP
+
+  # Check which services are active and format them for display
+  for SERVICE in ${ALL_SERVICES}; do
+    # Determine the service status
+    if systemctl is-active "${SERVICE}.service" >/dev/null 2>&1; then
+      STATUS="Active "
+    elif systemctl is-enabled "${SERVICE}.service" >/dev/null 2>&1; then
+      STATUS="Enabled "
+    else
+      continue
+    fi
+    
+    # Truncate very long service names to prevent display issues
+    DISPLAY_NAME="${SERVICE}"
+    if [ ${#DISPLAY_NAME} -gt 33 ]; then
+      DISPLAY_NAME="${DISPLAY_NAME:0:33}..."
+    fi
+    DISPLAY_NAME=$(printf "%-25s" "${DISPLAY_NAME}") # pad to exactly 25 chars
+    
+    # Store mapping between display name and actual service name
+    SERVICE_MAP["${DISPLAY_NAME}"]="${SERVICE}"
+    
+    # Add to the array with proper formatting
+    ACTIVE_SERVICES+=("${DISPLAY_NAME}" "${STATUS}" "OFF")
+  done
+
+  # Display interactive menu to select services
+  if [ ${#ACTIVE_SERVICES[@]} -eq 0 ]; then
+    echo "No active or enabled services found."
+    return 1
+  fi
+
+  echo "Displaying service selection menu..."
+  # Use a taller and wider dialog to accommodate more services
+  SELECTED_SERVICES=$(whiptail --title "Select Services to Manage" \
+    --checklist "Choose services that Resource Manager should manage:" \
+    25 57 17 "${ACTIVE_SERVICES[@]}" 3>&1 1>&2 2>&3)
+
+  # Check if user cancelled
+  if [ $? -ne 0 ]; then
+    echo "User cancelled service selection. Exiting..."
+    return 1
+  fi
+
+  # Remove quotes from whiptail output
+  SELECTED_SERVICES=$(echo "${SELECTED_SERVICES}" | tr -d '"')
+
+  # Convert string to array of display names
+  read -ra DISPLAY_SERVICES <<< "${SELECTED_SERVICES}"
+
+  # Convert display names back to actual service names
+  local SELECTED=()
+  for DISPLAY_NAME in "${DISPLAY_SERVICES[@]}"; do
+    # Trim whitespace from display name before lookup
+    TRIMMED_NAME=$(echo "${DISPLAY_NAME}" | xargs)
+    
+    # Loop through the keys in SERVICE_MAP to find a match
+    SERVICE=""
+    for KEY in "${!SERVICE_MAP[@]}"; do
+      TRIMMED_KEY=$(echo "${KEY}" | xargs)
+      if [[ "${TRIMMED_KEY}" == "${TRIMMED_NAME}" ]]; then
+        SERVICE="${SERVICE_MAP[${KEY}]}"
+        break
+      fi
+    done
+    
+    if [ -n "${SERVICE}" ]; then
+      SELECTED+=("${SERVICE}")
+    fi
+  done
+
+  if [ ${#SELECTED[@]} -eq 0 ]; then
+    echo "No services selected."
+    return 1
+  fi
+
+  echo "Selected services: ${SELECTED[*]}"
+  
+  # Return the selected services array
+  SERVICES=("${SELECTED[@]}")
+  return 0
+}
+
 # Vars
 INSTALL_DIR=$(pwd)
 BASE_DIR="${INSTALL_DIR}"
@@ -46,49 +138,11 @@ fi
 echo "Installing required packages..."
 apt-get update -y && apt-get install -y python3-venv python3-pip python-is-python3 smartmontools whiptail
 
-# Get all systemd services that are either active or enabled
-echo "Finding all systemd services..."
-ALL_SERVICES=$(systemctl list-units --type=service --state=active,enabled --no-legend | awk '{print $1}' | sed 's/\.service$//')
-ACTIVE_SERVICES=()
-
-# Check which services are active
-for SERVICE in ${ALL_SERVICES}; do
-  if systemctl is-active "${SERVICE}.service" >/dev/null 2>&1; then
-    ACTIVE_SERVICES+=("${SERVICE}" "Active" "ON")
-  elif systemctl is-enabled "${SERVICE}.service" >/dev/null 2>&1; then
-    ACTIVE_SERVICES+=("${SERVICE}" "Enabled" "OFF")
-  fi
-done
-
-# Display interactive menu to select services
-if [ ${#ACTIVE_SERVICES[@]} -eq 0 ]; then
-  echo "No active or enabled services found."
-  exit 1
-fi
-
-echo "Displaying service selection menu..."
-SELECTED_SERVICES=$(whiptail --title "Select Services to Manage" \
-  --checklist "Choose services that Resource Manager should manage:" \
-  20 78 15 "${ACTIVE_SERVICES[@]}" 3>&1 1>&2 2>&3)
-
-# Check if user cancelled
+# Call the service selection function
+select_services
 if [ $? -ne 0 ]; then
-  echo "User cancelled service selection. Exiting..."
   exit 1
 fi
-
-# Remove quotes from whiptail output
-SELECTED_SERVICES=$(echo "${SELECTED_SERVICES}" | tr -d '"')
-
-# Convert string to array
-read -ra SERVICES <<< "${SELECTED_SERVICES}"
-
-if [ ${#SERVICES[@]} -eq 0 ]; then
-  echo "No services selected. Exiting..."
-  exit 1
-fi
-
-echo "Selected services: ${SERVICES[*]}"
 
 # 1. Setup Virtual Environment
 echo "Setting up Python virtual environment..."
@@ -258,16 +312,18 @@ systemctl start ${SYSTEMD_UI_FILE_NAME}
 
 # 10. Print summary of service locations
 echo "==== Installation Summary ===="
+echo ""
 echo "Service locations:"
 for i in "${!VALID_SERVICES[@]}"; do
-  echo "  ${VALID_SERVICES[$i]}: ${SERVICE_LOCATIONS[$i]}"
+  echo "  - ${VALID_SERVICES[$i]}: ${SERVICE_LOCATIONS[$i]}"
 done
-
-echo "Resource Manager UI service: ${SYSTEMD_UI_SERVICE_FILE}"
-echo "Resource Manager Server service: ${SYSTEMD_SERVER_SERVICE_FILE}"
-echo "Sudoers file: ${SUDOERS_FILE}"
-echo "Config directory: ${CONFIG_DIR}"
-echo "Logs directory: ${LOGS_DIR}"
-
-echo "To access the UI, open your web browser and go to http://$(hostname -I | awk '{print $1}'):8081"
+echo ""
+echo " - Resource Manager UI service: ${SYSTEMD_UI_SERVICE_FILE}"
+echo " - Resource Manager Server service: ${SYSTEMD_SERVER_SERVICE_FILE}"
+echo " - Sudoers file: ${SUDOERS_FILE}"
+echo " - Config directory: ${CONFIG_DIR}"
+echo " - Logs directory: ${LOGS_DIR}"
+echo ""
 echo "Installation complete!"
+echo "To access the UI, open your web browser and go to http://$(hostname -I | awk '{print $1}'):8081"
+

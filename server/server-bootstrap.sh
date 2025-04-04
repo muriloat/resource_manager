@@ -11,14 +11,11 @@ fi
 
 # Define variables
 REPO_URL="https://github.com/muriloat/resource_manager.git"
-BASE_DIR="/opt/resource_manager"  # FIXED: Added leading slash
+BASE_DIR="/opt/resource_manager"
 INSTALL_DIR="${BASE_DIR}/server"
 VENV_DIR="${BASE_DIR}/venv"
 TMP_DIR=$(mktemp -d)
 OPERATION="operation"
-
-# Create installation directory if it doesn't exist
-mkdir -p "${INSTALL_DIR}"
 
 # Clone the latest version of the repository
 echo "Downloading latest code from ${REPO_URL}..."
@@ -29,20 +26,28 @@ git clone --depth 1 "${REPO_URL}" "${TMP_DIR}" || {
 }
 
 # Check if this is an installation or update
-if [[ $# -gt 0 ]]; then
-  # Installation mode with service arguments
-  echo "Running Resource Manager installation for services: $*"
+if [[ ! -d "${INSTALL_DIR}" || ! -f "${INSTALL_DIR}/resource_manager_server.py" ]]; then
+  # Installation mode - server doesn't exist yet
+  echo "No existing installation found. Running Resource Manager installation..."
   OPERATION="install"
+  
+  # Create installation directory if it doesn't exist
+  mkdir -p "${INSTALL_DIR}"
+  
   # Copy the install script from the repo to the installation directory
   cp "${TMP_DIR}/server/server-install.sh" "${INSTALL_DIR}/"
   chmod +x "${INSTALL_DIR}/server-install.sh"
   
-  # Run the installation script with the provided services
-  "${INSTALL_DIR}/server-install.sh" "$@"
+  # Install required packages for the interactive menu
+  apt-get update -y && apt-get install -y whiptail
+  
+  # Run the installation script (with no arguments - it will use service selection)
+  "${INSTALL_DIR}/server-install.sh"
 else
-  # Update mode - no arguments
-  echo "Bootstrapping Resource Manager update..."
+  # Update mode - server already exists
+  echo "Existing installation found. Bootstrapping Resource Manager update..."
   OPERATION="update"
+  
   # Copy the update script from the repo to the installation directory
   cp "${TMP_DIR}/server/server-update.sh" "${INSTALL_DIR}/"
   chmod +x "${INSTALL_DIR}/server-update.sh"

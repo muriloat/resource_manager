@@ -1,10 +1,10 @@
 #!/bin/bash
-# This script-v2 installs the Resource Manager server and sets up the provided services.
+# This script installs the Resource Manager server and sets up the provided services.
 # It creates a system user for the server, a Python virtual environment, a systemd service,
 # and a sudoers file for the system user to manage the services.
 # Author: Murilo Teixeira - dev@murilo.etc.br
 # Refer to https://github.com/muriloat/resource_manager for more information.
-# Usage: sudo ./server-install.sh service_name1 [service_name2 ...]
+# Usage: sudo ./server-install.sh
 
 set -euo pipefail
 
@@ -14,21 +14,102 @@ if [[ $EUID -ne 0 ]]; then
   exit 1
 fi
 
-# Check for at least one service name parameter
-if [ "$#" -lt 1 ]; then
-  echo "Usage: $0 service_name1 [service_name2 ...]" >&2
-  exit 1
-fi
+# Define a reusable function for service selection
+select_services() {
+  # Get all systemd services that are either active or enabled
+  echo "Finding all systemd services..."
+  local ALL_SERVICES=$(systemctl list-units --type=service --state=active,enabled --no-legend | awk '{print $1}' | sed 's/\.service$//')
+  local ACTIVE_SERVICES=()
 
-# Packages dependencies:
-echo "Installing Dependencies..."
-apt-get update -y && apt-get install python3-venv python3-pip python-is-python3 smartmontools -y
+  # Create an associative array to map display names to actual service names
+  declare -A SERVICE_MAP
 
+  # Check which services are active and format them for display
+  for SERVICE in ${ALL_SERVICES}; do
+    # Determine the service status
+    if systemctl is-active "${SERVICE}.service" >/dev/null 2>&1; then
+      STATUS="Active "
+    elif systemctl is-enabled "${SERVICE}.service" >/dev/null 2>&1; then
+      STATUS="Enabled "
+    else
+      continue
+    fi
+    
+    # Truncate very long service names to prevent display issues
+    DISPLAY_NAME="${SERVICE}"
+    if [ ${#DISPLAY_NAME} -gt 33 ]; then
+      DISPLAY_NAME="${DISPLAY_NAME:0:33}..."
+    fi
+    DISPLAY_NAME=$(printf "%-25s" "${DISPLAY_NAME}") # pad to exactly 25 chars
+    
+    # Store mapping between display name and actual service name
+    SERVICE_MAP["${DISPLAY_NAME}"]="${SERVICE}"
+    
+    # Add to the array with proper formatting
+    ACTIVE_SERVICES+=("${DISPLAY_NAME}" "${STATUS}" "OFF")
+  done
+
+  # Display interactive menu to select services
+  if [ ${#ACTIVE_SERVICES[@]} -eq 0 ]; then
+    echo "No active or enabled services found."
+    return 1
+  fi
+
+  echo "Displaying service selection menu..."
+  # Use a taller and wider dialog to accommodate more services
+  SELECTED_SERVICES=$(whiptail --title "Select Services to Manage" \
+    --checklist "Choose services that Resource Manager should manage:" \
+    25 57 17 "${ACTIVE_SERVICES[@]}" 3>&1 1>&2 2>&3)
+
+  # Check if user cancelled
+  if [ $? -ne 0 ]; then
+    echo "User cancelled service selection. Exiting..."
+    return 1
+  fi
+
+  # Remove quotes from whiptail output
+  SELECTED_SERVICES=$(echo "${SELECTED_SERVICES}" | tr -d '"')
+
+  # Convert string to array of display names
+  read -ra DISPLAY_SERVICES <<< "${SELECTED_SERVICES}"
+
+  # Convert display names back to actual service names
+  local SELECTED=()
+  for DISPLAY_NAME in "${DISPLAY_SERVICES[@]}"; do
+    # Trim whitespace from display name before lookup
+    TRIMMED_NAME=$(echo "${DISPLAY_NAME}" | xargs)
+    
+    # Loop through the keys in SERVICE_MAP to find a match
+    SERVICE=""
+    for KEY in "${!SERVICE_MAP[@]}"; do
+      TRIMMED_KEY=$(echo "${KEY}" | xargs)
+      if [[ "${TRIMMED_KEY}" == "${TRIMMED_NAME}" ]]; then
+        SERVICE="${SERVICE_MAP[${KEY}]}"
+        break
+      fi
+    done
+    
+    if [ -n "${SERVICE}" ]; then
+      SELECTED+=("${SERVICE}")
+    fi
+  done
+
+  if [ ${#SELECTED[@]} -eq 0 ]; then
+    echo "No services selected."
+    return 1
+  fi
+
+  echo "Selected services: ${SELECTED[*]}"
+  
+  # Return the selected services array
+  SERVICES=("${SELECTED[@]}")
+  return 0
+}
 
 # Vars
 REPO_URL="https://github.com/muriloat/resource_manager.git"
 TMP_DIR=$(mktemp -d)
-BASE_DIR="/opt/resource_manager"  # FIXED: Added leading slash
+BASE_DIR="/opt/resource_manager"
 INSTALL_DIR="${BASE_DIR}/server"
 VENV_DIR="${BASE_DIR}/venv"
 SERVICE_USER="resource_manager"
@@ -36,7 +117,15 @@ SUDOERS_FILE="/etc/sudoers.d/resource_manager"
 SYSTEMD_FILE_NAME="resource_manager_server.service"
 SYSTEMD_SERVICE_FILE="/etc/systemd/system/${SYSTEMD_FILE_NAME}"
 
-echo "Installing Resource Manager Server with services: $*"
+# Packages dependencies:
+echo "Installing Dependencies..."
+apt-get update -y && apt-get install python3-venv python3-pip python-is-python3 smartmontools whiptail -y
+
+# Call the service selection function
+select_services
+if [ $? -ne 0 ]; then
+  exit 1
+fi
 
 # Clone the repository
 echo "Cloning repository from ${REPO_URL}..."
@@ -58,8 +147,9 @@ cp "${TMP_DIR}/server/fixed_pagination.py" "${INSTALL_DIR}/"
 chmod +x "${INSTALL_DIR}/server-bootstrap.sh"
 chmod +x "${INSTALL_DIR}/server-uninstall.sh"
 chmod +x "${INSTALL_DIR}/server-update.sh"
+chmod +x "${INSTALL_DIR}/get_detailed.sh"
 
-# Create services_config.py from the provided services
+# Create services_config.py from the selected services
 echo "Generating services_config.py..."
 SERVICES_CONFIG_FILE="${INSTALL_DIR}/services_config.py"
 cat <<EOF > "${SERVICES_CONFIG_FILE}"
@@ -76,7 +166,7 @@ EOF
 VALID_SERVICES=()
 SERVICE_LOCATIONS=()
 
-for SERVICE in "$@"; do
+for SERVICE in "${SERVICES[@]}"; do
   # Check common locations for systemd service files
   if [ -f "/etc/systemd/system/${SERVICE}.service" ]; then
     echo "Found service ${SERVICE} in /etc/systemd/system/"
@@ -104,7 +194,6 @@ echo "preserved_files = [" >> "${SERVICES_CONFIG_FILE}"
 echo "    \"server-bootstrap.sh\"," >> "${SERVICES_CONFIG_FILE}"  
 echo "    \"server-uninstall.sh\"," >> "${SERVICES_CONFIG_FILE}"
 echo "]" >> "${SERVICES_CONFIG_FILE}"
-
 
 # Set up the Python virtual environment and install dependencies
 echo "Setting up Python virtual environment in ${VENV_DIR}..."
