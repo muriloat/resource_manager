@@ -1,4 +1,4 @@
-import logging
+import os
 from ..config import ClientConfig
 from ..logging_setup import setup_client_logging
 from .ui_config import UIConfig
